@@ -10,4 +10,13 @@ const createUser= async(req, res)=>{
         res.status(500).json({error:"Internal Server Error"});
     }
 }
-module.exports= {createUser}
+const getAllUser= async(req, res)=>{
+    try {
+        const users= await User.find();
+        res.status(200).json(users)
+    } catch (error) {
+        console.error("Error Saving:",err);
+        res.status(500).json({error:"Internal Server Error"});
+    }
+}
+module.exports= {createUser,getAllUser}
