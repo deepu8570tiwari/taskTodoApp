@@ -26,5 +26,21 @@ services:
     depends_on:
       - mongo
 
+  task-service:
+    build:
+      context: ./taskServices
+      dockerfile: Dockerfile
+    container_name: task-service
+    restart: always
+    ports:
+      - "5011:5011"
+    environment:
+      - NODE_ENV=production
+      - MONGO_URL=mongodb://mongo:27017/tasksdb
+    env_file:
+      - ./taskServices/.env
+    depends_on:
+      - mongo
+
 volumes:
   mongo_data:
