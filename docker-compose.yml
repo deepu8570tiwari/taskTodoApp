@@ -1,4 +1,4 @@
-version: "3.9"
+version: "3.10"
 
 services:
   mongo:
@@ -9,7 +9,15 @@ services:
       - "27017:27017"
     volumes:
       - mongo_data:/data/db
-
+  rabbitmq:
+    image: rabbitmq:3-management   # ✅ includes management UI
+    container_name: rabbitmq_service
+    restart: always
+    ports:
+      - "5672:5672"    # main messaging port
+      - "15672:15672"  # management UI port
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq   # optional persistent data
   users-service:
     build:
       context: ./usersServices
@@ -37,10 +45,39 @@ services:
     environment:
       - NODE_ENV=production
       - MONGO_URL=mongodb://mongo:27017/tasksdb
+      - RabbitMQ_protocol=amqp
+      - RabbitMQ_hostname=rabbitmq
+      - RabbitMQ_port=5672
+      - RabbitMQ_username=guest
+      - RabbitMQ_password=guest
     env_file:
       - ./taskServices/.env
     depends_on:
       - mongo
+      - rabbitmq
+  
+  notification-service:
+    build:
+      context: ./notificationServices
+      dockerfile: Dockerfile
+    container_name: notification-service
+    restart: always
+    ports:
+      - "5012:5012"
+    environment:
+      - NODE_ENV=production
+      - MONGO_URL=mongodb://mongo:27017/tasksdb
+      - RabbitMQ_protocol=amqp
+      - RabbitMQ_hostname=rabbitmq
+      - RabbitMQ_port=5672
+      - RabbitMQ_username=guest
+      - RabbitMQ_password=guest
+    env_file:
+      - ./notificationServices/.env
+    depends_on:
+      - mongo
+      - rabbitmq
 
 volumes:
   mongo_data:
+  rabbitmq_data:
